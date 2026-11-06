@@ -1,0 +1,64 @@
+# LOCAL DEV ONLY. Production uses wrangler.production.toml, sandbox uses
+# wrangler.sandbox.toml. Never deploy this file: DEBUG=true + a non-localhost
+# APP_URL is refused at boot by the guard in src/index.ts.
+name = "release-radar-local"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# The React SPA (frontend/dist). run_worker_first => the Worker handles every
+# request (API/auth first), and app.ts serves ASSETS for non-API routes;
+# single-page-application fallback returns index.html for client routes.
+[assets]
+directory = "frontend/dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = true
+
+[dev]
+port = 8787
+
+[[d1_databases]]
+binding = "DB"
+database_name = "release-radar"
+database_id = "00000000-0000-0000-0000-000000000000"   # replace with the local/prod DB id
+migrations_dir = "migrations"
+
+[triggers]
+# Hourly steady-state poll (daily is acceptable for a changelog); every 15 min
+# the off-tick CX copy generator runs (a no-op when AI_PROVIDER=off).
+crons = ["0 * * * *", "*/15 * * * *"]
+
+[vars]
+DEBUG = "true"
+APP_URL = "http://localhost:8787"
+
+# --- Config-not-constants (§6). Every scoping/attribution input is config,
+#     never hardcoded, so an OSS adopter re-points without a code change. ---
+GITHUB_REPO = "acme/monorepo"         # owner/repo the poll reads (local testbed)
+RELEASE_TAG_PATTERN = "{app}-*-production"    # prod deploy tag glob; {app} = app slug
+MAPPING_JSON_PATH = ".github/mapping.json"    # path->app source, fetched via GitHub API
+ALLOWED_EMAIL_DOMAINS = "example.com"          # comma-separated SSO allow-list (fail-closed)
+SHARED_LIB_BUCKET = "platform"                 # synthetic umbrella for unmapped shared libs
+BACKFILL_DAYS = "90"                          # bootstrap history window
+
+# --- OAuth SSO (the first AuthProvider impl; see src/auth). Local dev
+#     points at localhost OAuth; real client id/secret live in .dev.vars. ---
+OAUTH_API_URL = "http://localhost:3000"
+OAUTH_UI_URL = "http://localhost:4200"
+
+# --- AI provider seam. `off` => Dev lens only, CX degrades to PR-title
+#     fallback copy (no external egress). API keys are secrets — NOT set here. ---
+AI_PROVIDER = "gemini"                    # local dev: use Gemini (set GEMINI_API_KEY in .dev.vars)
+AI_MODEL = "gemini-2.5-flash"            # per-provider default; omit to accept the default
+AI_MONTHLY_CAP_CENTS = "5000"    # local-only: raised for testbed demos (ledger over-counts ~15x; real spend tiny). Prod/sandbox keep their own caps.
+CUSTOMER_FACING_LABELS = "customer-facing"   # comma-separated; empty => nothing is CX by label
+CUSTOMER_FACING_ISSUE_TYPES = ""   # comma-separated GitHub issue types (e.g. "Bug"); empty => off. No effect unless the org uses issue types.
+
+# Secrets (NOT set here — use `wrangler secret put` for prod, .dev.vars for local):
+#   GITHUB_TOKEN                    fine-grained read-only PAT (contents+issues+PRs+metadata)
+#   OAUTH_CLIENT_ID
+#   OAUTH_CLIENT_SECRET
+#   SESSION_ENCRYPTION_KEY          AES-GCM key for at-rest OAuth token blobs
+#   ANTHROPIC_API_KEY               only when AI_PROVIDER=anthropic
+#   GEMINI_API_KEY                  only when AI_PROVIDER=gemini

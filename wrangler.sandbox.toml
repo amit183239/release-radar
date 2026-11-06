@@ -1,0 +1,47 @@
+# SANDBOX. Deploy with `wrangler deploy --config wrangler.sandbox.toml`.
+# Mirrors production but on the sandbox host (sandbox zone) for
+# DNS-zone isolation from prod. DEBUG=false.
+name = "release-radar-sandbox"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[assets]
+directory = "frontend/dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "release-radar-sandbox"
+database_id = "00000000-0000-0000-0000-000000000000"   # sandbox DB id
+migrations_dir = "migrations"
+
+[triggers]
+crons = ["0 * * * *", "*/15 * * * *"]
+
+[vars]
+DEBUG = "false"
+APP_URL = "https://release-radar-sandbox.example.com"
+
+GITHUB_REPO = "acme/monorepo"
+RELEASE_TAG_PATTERN = "{app}-*-production"
+MAPPING_JSON_PATH = ".github/mapping.json"
+ALLOWED_EMAIL_DOMAINS = "example.com"
+SHARED_LIB_BUCKET = "platform"
+BACKFILL_DAYS = "90"
+
+OAUTH_API_URL = "https://auth-api.example.com"
+OAUTH_UI_URL = "https://auth.example.com"
+
+AI_PROVIDER = "off"                       # sandbox ships off; mirror prod policy
+# AI_MODEL = ""                           # omit to accept the per-provider default
+AI_MONTHLY_CAP_CENTS = "500"
+CUSTOMER_FACING_LABELS = ""
+CUSTOMER_FACING_ISSUE_TYPES = ""
+
+# Secrets via `wrangler secret put --config wrangler.sandbox.toml <NAME>`:
+#   GITHUB_TOKEN, OAUTH_CLIENT_ID, OAUTH_CLIENT_SECRET, SESSION_ENCRYPTION_KEY
+#   ANTHROPIC_API_KEY (only when AI_PROVIDER=anthropic)
+#   GEMINI_API_KEY    (only when AI_PROVIDER=gemini)

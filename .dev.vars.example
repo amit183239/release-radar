@@ -1,0 +1,20 @@
+# Copy to `.dev.vars` for local dev (gitignored). These are the SECRETS that
+# wrangler.toml intentionally does not carry. In prod/sandbox set them with
+# `wrangler secret put <NAME> --config wrangler.<env>.toml`.
+
+# Fine-grained GitHub PAT: read-only, org-scoped, with Contents + Issues +
+# Pull requests + Metadata read. Drives the poll. Never commit a real value.
+GITHUB_TOKEN=github_pat_xxxxxxxxxxxxxxxxxxxx
+
+# OAuth OAuth2 app credentials (the first AuthProvider impl).
+OAUTH_CLIENT_ID=your-oauth-client-id
+OAUTH_CLIENT_SECRET=your-oauth-client-secret
+
+# AES-GCM key (base64, 32 bytes) used to encrypt OAuth access/refresh tokens
+# at rest in the sessions table. Generate: openssl rand -base64 32
+SESSION_ENCRYPTION_KEY=base64-32-byte-key
+
+# Optional: bearer token for POST /admin/poll and /admin/backfill when DEBUG is
+# off (prod/sandbox out-of-band backfill trigger). Empty => token path disabled.
+# Generate: openssl rand -base64 32
+ADMIN_TOKEN=

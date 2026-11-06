@@ -1,0 +1,42 @@
+{
+  "name": "release-radar",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A standalone, poll-based per-app release changelog for a GitHub monorepo, with a dual-persona (Dev + CX) read surface behind SSO.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build:frontend": "npm --prefix frontend install && npm --prefix frontend run build",
+    "predeploy": "npm run build:frontend",
+    "deploy": "wrangler deploy --config wrangler.production.toml",
+    "predeploy:sandbox": "npm run build:frontend",
+    "deploy:sandbox": "wrangler deploy --config wrangler.sandbox.toml",
+    "typecheck": "tsc --noEmit && tsc -p test/integration --noEmit",
+    "lint": "eslint \"src/**/*.ts\"",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "db:migrate:local": "wrangler d1 migrations apply release-radar --local",
+    "seed:local": "wrangler d1 execute release-radar --local --file seed.dev.sql",
+    "db:migrate:prod": "wrangler d1 migrations apply release-radar --remote --config wrangler.production.toml",
+    "db:migrate:sandbox": "wrangler d1 migrations apply release-radar-sandbox --remote --config wrangler.sandbox.toml"
+  },
+  "dependencies": {
+    "hono": "^4.12.18"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.23.0",
+    "@cloudflare/workers-types": "^5.20260811.1",
+    "@types/better-sqlite3": "^7.6.13",
+    "@typescript-eslint/eslint-plugin": "7.18.0",
+    "@typescript-eslint/parser": "7.18.0",
+    "better-sqlite3": "^11.10.0",
+    "eslint": "8.57.1",
+    "eslint-config-prettier": "10.1.1",
+    "prettier": "^2.8.8",
+    "typescript": "^5.9.3",
+    "vitest": "4.1.10",
+    "wrangler": "^4.59.3"
+  }
+}

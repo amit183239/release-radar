@@ -1,0 +1,11 @@
+# Integration-test-only Worker config: D1 binding ONLY. No [assets] (so it never
+# needs the gitignored frontend/dist), no crons, no vars, no main (tests call
+# runPollWithSource directly). Never deployed.
+name = "release-radar-integration"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "release-radar-test"
+database_id = "00000000-0000-0000-0000-000000000000"
